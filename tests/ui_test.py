@@ -91,6 +91,10 @@ with sync_playwright() as p:
         shot(pg, f"d-{tab}")
     for h in ["#/home", "#/standings", "#/rankings", "#/team/Stanford", "#/records", "#/history", "#/coaches", "#/offseason"]:
         visit(pg, h, "e-" + h.strip("#/").replace("/", "-"))
+    # Team schedules: four quarters are regulation, so only overtime games say OT.
+    t = visit(pg, "#/team/Stanford")
+    ots = t.count("OT") + t.count("shootout")
+    assert ots < 8, f"{ots} overtime notes on one team's schedule"
     t = visit(pg, "#/records")
     assert "Most goals in a match" in t and "shootout" in t.lower() and " tie" not in t.lower()
 

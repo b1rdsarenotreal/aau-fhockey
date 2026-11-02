@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref } from './ui.js?v=20261102003218';
-import { isFinal, winnerOf, resultFor, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261102003218';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261102003218';
-import { ovr } from './sim.js?v=20261102003218';
-import { simGames, addGame, weekName } from './league.js?v=20261102003218';
-import { CONF_FORMATS, confFormatName, confKind } from './postseason.js?v=20261102003218';
-import { COMMITTEE_TIERS, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261102003218';
-import { fmtPct, hashStr } from './util.js?v=20261102003218';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261102003218';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref } from './ui.js?v=20261102154055';
+import { isFinal, winnerOf, resultFor, records, rpi, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261102154055';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261102154055';
+import { ovr } from './sim.js?v=20261102154055';
+import { simGames, addGame, weekName } from './league.js?v=20261102154055';
+import { CONF_FORMATS, confFormatName, confKind } from './postseason.js?v=20261102154055';
+import { COMMITTEE_TIERS, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261102154055';
+import { fmtPct, hashStr } from './util.js?v=20261102154055';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261102154055';
 
 // " at Easton Stadium, Los Angeles, Calif." for a host school with a home field.
 const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadium, t?.city].filter(Boolean).join(', '); return f ? ` at ${esc(f)}` : ''; };
@@ -116,7 +116,7 @@ function miniScore(g, s) {
   const w = winnerOf(g);
   const side = (t, r) => { const info = teamInfo(t); return `<span class="ms-team ${w === t && g.homeR !== g.awayR ? 'is-win' : ''}">${logoImg(info, 20)}<span class="ms-abbr" title="${esc(t)}">${esc(info?.abbr || t)}</span><b class="ms-r">${r}</b></span>`; };
   const inn = Math.max(g.homeLine.length, g.awayLine.length);
-  return `<button type="button" class="mini-score" data-open="${g.id}" title="${esc(resultText(g))}">${side(g.away, g.awayR)}${side(g.home, g.homeR)}<span class="ms-when">${esc(weekName(g.week, s).replace('Week ', 'Wk '))} ${esc(g.day)}${g.pk ? ' · F/PK' : periodNote(g) ? ` · F/${periodNote(g)}` : ''}</span></button>`;
+  return `<button type="button" class="mini-score" data-open="${g.id}" title="${esc(resultText(g))}">${side(g.away, g.awayR)}${side(g.home, g.homeR)}<span class="ms-when">${esc(weekName(g.week, s).replace('Week ', 'Wk '))} ${esc(g.day)}${g.pk ? ' · F/SO' : periodNote(g) ? ` · F/${periodNote(g)}` : ''}</span></button>`;
 }
 
 // ---------- Schedule ----------
@@ -292,7 +292,7 @@ function weekPopupHtml(s, t, games, key) {
   const title = key === 'final' ? 'National Tournament' : key === postWeeks(s).conf ? 'Conference tournament' : `Week ${key}`;
   return `<div class="wkp-head">${logoImg(teamInfo(t), 18)}<b>${esc(t)}</b><span class="muted">${title}</span></div>
     ${games.map(g => {
-      const home = g.home === t, opp = home ? g.away : g.home, res = resultFor(g, t), note = g.pk ? `PK ${home ? g.pk.home : g.pk.away}-${home ? g.pk.away : g.pk.home}` : periodNote(g);
+      const home = g.home === t, opp = home ? g.away : g.home, res = resultFor(g, t), note = g.pk ? `SO ${home ? g.pk.home : g.pk.away}-${home ? g.pk.away : g.pk.home}` : periodNote(g);
       const at = (g.site || (g.neutral ? null : g.home)) === opp ? 'at' : 'vs.';
       const r = cache.ranksAt(g.week)[opp], inn = Math.max(g.homeLine.length, g.awayLine.length);
       return `<div class="wkp-row"><span class="wkp-day">${esc(g.day)}</span><span class="wkp-vs">${at}</span><span class="pt-logo wkp-logo">${logoImg(teamInfo(opp), 18)}</span>

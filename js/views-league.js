@@ -1,19 +1,19 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { readAauLogos, applyAauLogos } from './logo-import.js?v=20261102003218';
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261102003218';
-import { isFinal, winnerOf, resultFor, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261102003218';
-import { ovr } from './sim.js?v=20261102003218';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261102003218';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261102003218';
-import { hotSeat, HEAT } from './hotseat.js?v=20261102003218';
-import { setRating } from './ratings.js?v=20261102003218';
-import { confFormatName, aqConferences, aqMinOf, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261102003218';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, confTarget } from './schedule.js?v=20261102003218';
-import { exportLeague, clearLeague } from './store.js?v=20261102003218';
-import { conferencesFor, sideOf } from './data.js?v=20261102003218';
-import { clamp, fmtPct } from './util.js?v=20261102003218';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261102003218';
+import { readAauLogos, applyAauLogos } from './logo-import.js?v=20261102154055';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText, periodNote } from './ui.js?v=20261102154055';
+import { isFinal, winnerOf, resultFor, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261102154055';
+import { ovr } from './sim.js?v=20261102154055';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261102154055';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261102154055';
+import { hotSeat, HEAT } from './hotseat.js?v=20261102154055';
+import { setRating } from './ratings.js?v=20261102154055';
+import { confFormatName, aqConferences, aqMinOf, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261102154055';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, confTarget } from './schedule.js?v=20261102154055';
+import { exportLeague, clearLeague } from './store.js?v=20261102154055';
+import { conferencesFor, sideOf } from './data.js?v=20261102154055';
+import { clamp, fmtPct } from './util.js?v=20261102154055';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261102154055';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -536,7 +536,8 @@ function teamScheduleRows(s, name, t, games) {
     last = grp ? grp.key : null;
     const home = g.home === name, opp = home ? g.away : g.home;
     const fin = isFinal(g), res = fin ? resultFor(g, name) : null, won = res === 'W';
-    const extra = fin ? (g.pk ? `${winnerOf(g) === name ? 'Won' : 'Lost'} ${Math.max(g.pk.home, g.pk.away)}-${Math.min(g.pk.home, g.pk.away)} on PKs` : Math.max(g.homeLine.length, g.awayLine.length) > 2 ? `${Math.max(g.homeLine.length, g.awayLine.length) === 3 ? 'OT' : '2OT'}` : '') : '';
+    // Overtime or a shootout (four quarters are regulation).
+    const extra = fin ? (g.pk ? `${winnerOf(g) === name ? 'Won' : 'Lost'} ${Math.max(g.pk.home, g.pk.away)}-${Math.min(g.pk.home, g.pk.away)} in the shootout` : periodNote(g)) : '';
     // Where it's played: the host's arena (a tournament host's when neither
     // team is the host), or the Championship arena. City on top, arena below.
     const v = gameVenue(s, g), site = v.host;
