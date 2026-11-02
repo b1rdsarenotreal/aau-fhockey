@@ -91,7 +91,15 @@ check('schedule: two matches a week, Friday and Sunday; a single round robin in 
   const conf = count(g.filter(x => x.confGame));
   const sizes = {};
   for (const t of Object.values(s.teams)) sizes[t.conference] = (sizes[t.conference] || 0) + 1;
-  for (const t of Object.values(s.teams)) assert.equal(conf[t.school] || 0, sizes[t.conference] - 1, `${t.school} plays everyone in its conference once`);
+  for (const t of Object.values(s.teams)) assert.equal(conf[t.school] || 0, confTarget(sizes[t.conference]), `${t.school}: everyone once (twice in a conference of 6 or fewer)`);
+  const meets = {};
+  for (const x of g.filter(x => x.confGame)) (meets[[x.home, x.away].sort().join('|')] ||= []).push(x.home);
+  for (const [k, homes] of Object.entries(meets)) {
+    const size = sizes[s.teams[k.split('|')[0]].conference];
+    if (size <= 6) assert.ok(homes.length === 2 && homes[0] !== homes[1], `${k}: home and away`);
+    else assert.equal(homes.length, 1, `${k}: once`);
+  }
+  assert.equal(confTarget(4), 6); assert.equal(confTarget(7), 6); assert.equal(confTarget(8), 7);
   assert.ok(g.every(x => x.confGame || s.teams[x.home].conference !== s.teams[x.away].conference));
   const confWeek = new Set(g.filter(x => x.confGame).flatMap(x => [`${x.home}|${x.week}`, `${x.away}|${x.week}`]));
   assert.equal(g.filter(x => !x.confGame && (confWeek.has(`${x.home}|${x.week}`) || confWeek.has(`${x.away}|${x.week}`))).length, 0);
@@ -207,7 +215,7 @@ check('offseason and the next season', () => {
   const s2 = startNextSeason(league);
   assert.equal(s2.year, 2031);
   const conf = count(reg(s2).filter(g => g.confGame && s2.teams[g.home].conference === 'West Coast'));
-  assert.deepEqual(Object.values(conf), [2, 2, 2]);
+  assert.deepEqual(Object.values(conf), [4, 4, 4], 'a 3-team conference plays everyone twice');
   rebuildSchedule(s2, s);
   assert.ok(reg(s2).length > 0);
 });

@@ -1,19 +1,19 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { readAauLogos, applyAauLogos } from './logo-import.js?v=20261102000214';
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261102000214';
-import { isFinal, winnerOf, resultFor, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261102000214';
-import { ovr } from './sim.js?v=20261102000214';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261102000214';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261102000214';
-import { hotSeat, HEAT } from './hotseat.js?v=20261102000214';
-import { setRating } from './ratings.js?v=20261102000214';
-import { confFormatName, aqConferences, aqMinOf, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261102000214';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES } from './schedule.js?v=20261102000214';
-import { exportLeague, clearLeague } from './store.js?v=20261102000214';
-import { conferencesFor, sideOf } from './data.js?v=20261102000214';
-import { clamp, fmtPct } from './util.js?v=20261102000214';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261102000214';
+import { readAauLogos, applyAauLogos } from './logo-import.js?v=20261102003218';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText } from './ui.js?v=20261102003218';
+import { isFinal, winnerOf, resultFor, records, rpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261102003218';
+import { ovr } from './sim.js?v=20261102003218';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261102003218';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel } from './league.js?v=20261102003218';
+import { hotSeat, HEAT } from './hotseat.js?v=20261102003218';
+import { setRating } from './ratings.js?v=20261102003218';
+import { confFormatName, aqConferences, aqMinOf, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261102003218';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, confTarget } from './schedule.js?v=20261102003218';
+import { exportLeague, clearLeague } from './store.js?v=20261102003218';
+import { conferencesFor, sideOf } from './data.js?v=20261102003218';
+import { clamp, fmtPct } from './util.js?v=20261102003218';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261102003218';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -928,7 +928,7 @@ function gamesEstimate(cs, cur) {
   const n = {};
   for (const t of Object.values(cur.teams)) if (!isIndependent(t.conference)) n[t.conference] = (n[t.conference] || 0) + 1;
   const per = Object.values(n).map(k => {
-    const conf = Math.min(k - 1, max), rounds = Math.min(k % 2 ? k : k - 1, max + 1), weeks = Math.ceil(rounds / 2);
+    const conf = confTarget(k, max), perRR = k % 2 ? k : k - 1, rounds = conf > k - 1 ? 2 * perRR : Math.min(perRR, max + 1), weeks = Math.ceil(rounds / 2);
     return Math.min(cap, conf + 2 * Math.max(0, R - weeks));
   });
   if (!per.length) return `${Math.min(cap, 2 * R)}`;
@@ -980,7 +980,7 @@ export function renderSettings() {
         <label class="field">Most conference matches per team <input type="number" id="s-cm" min="2" max="24" value="${cs.confMatches ?? DEFAULT_CONF_MATCHES}"></label>
         <label class="field">Most regular-season matches per team <input type="number" id="s-max" min="12" max="30" value="${cs.maxMatches ?? DEFAULT_MAX_MATCHES}"></label>
         <p class="small">About <b>${gamesEstimate(cs, cur)}</b> matches per team.</p>
-        <p class="small muted">Used for every new schedule: the next season, or "Rebuild schedule" before any matches are played. ${cur.year} runs ${regWeeksOf(cur)} weeks. Teams play two matches a week, Friday and Sunday. Conference play is a single round robin (everyone once, at most the number above), one week per two rounds, so bigger conferences start earlier and everyone finishes on the last weekend. Before that, teams play non-conference matches against nearby schools of a similar level from other conferences, up to the season cap. A team with a conference bye plays just its one match that week.</p>
+        <p class="small muted">Used for every new schedule: the next season, or "Rebuild schedule" before any matches are played. ${cur.year} runs ${regWeeksOf(cur)} weeks. Teams play two matches a week, Friday and Sunday. Conference play is a single round robin (everyone once; a conference of 6 or fewer plays everyone twice, home and away; at most the number above), one week per two rounds, so bigger conferences start earlier and everyone finishes on the last weekend. Before that, teams play non-conference matches against nearby schools of a similar level from other conferences, up to the season cap. A team with a conference bye plays just its one match that week.</p>
       </div>
       <div class="card stack ncaa-card"><h2>AAU National Tournament</h2>
         <label class="field">Format <select id="n-mode"><option value="reg" ${nc.regionals ? 'selected' : ''}>Regions, then the Final Four</option><option value="none" ${nc.regionals ? '' : 'selected'}>No regions: the whole field at the Final Four site</option></select></label>

@@ -25,7 +25,8 @@ to those repos, and theirs aren't ported here, unless the owner asks.
 - Ratings are stored as `off`, `pit`, `def` and shown as ATT, MID, DEF.
   OVR = 0.4/0.3/0.3.
 - Schedule: two matches a week, Friday and Sunday; conference play is a single
-  round robin; non-conference matches pair nearby teams of similar level;
+  round robin, or a double round robin (home and away) for a conference of
+  6 or fewer (`confTarget`, `DOUBLE_ROUND_ROBIN_MAX`); non-conference matches pair nearby teams of similar level;
   cap 18.
 - **Automatic bids only for conferences with at least `settings.aqMin` (4)
   teams** (`aqConferences` in `js/postseason.js`); conference tournaments (top

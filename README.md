@@ -64,7 +64,9 @@ seasons, as in MCS Dynasty.
 
 - **Ten weeks** from the last Friday in August, **two matches a week, Friday
   and Sunday** (each conference can pick other days on the Standings page).
-- **Conference play is a single round robin**, everyone once. Bigger
+- **Conference play is a single round robin**, everyone once. **A conference
+  of 6 or fewer plays a double round robin**: everyone twice, once at home and
+  once away (the Coastal Atlantic, UAA, Metro and Pac-10). Bigger
   conferences start earlier; everyone finishes on the last weekend.
 - **Non-conference matches** fill the weeks before: nearby schools of a similar
   level from other conferences, up to the season cap (18). Teams play about

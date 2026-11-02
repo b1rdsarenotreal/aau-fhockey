@@ -20,9 +20,9 @@
 // When `prev` (last season) is given, conference opponents who met last year
 // swap home and away.
 
-import { isIndependent } from './standings.js?v=20261102000214';
-import { cityPoint, miles } from './geo.js?v=20261102000214';
-import { rng, shuffle, hashStr } from './util.js?v=20261102000214';
+import { isIndependent } from './standings.js?v=20261102003218';
+import { cityPoint, miles } from './geo.js?v=20261102003218';
+import { rng, shuffle, hashStr } from './util.js?v=20261102003218';
 
 export const DEFAULT_REG_WEEKS = 10;
 export const DEFAULT_TOURNEY_WEEKS = 0; // kept for older code paths: no invitationals
@@ -31,9 +31,13 @@ export const PER_WEEK = 2; // conference matches a week
 export const DEFAULT_CONF_MATCHES = 10; // most conference matches a team plays
 export const DEFAULT_MAX_MATCHES = 18;  // most regular-season matches (about what NCAA teams play)
 
-// Conference matches each team in an n-team conference plays: everyone once
-// (a single round robin), or `max` if that is fewer.
-export const confTarget = (n, max = DEFAULT_CONF_MATCHES) => (n < 2 ? 0 : Math.min(n - 1, max));
+// A conference this small plays a double round robin: everyone twice, once
+// at home and once away.
+export const DOUBLE_ROUND_ROBIN_MAX = 6;
+// Conference matches each team in an n-team conference plays: everyone twice
+// (home and away) in a conference of 6 or fewer, otherwise everyone once (a
+// single round robin); never more than `max`.
+export const confTarget = (n, max = DEFAULT_CONF_MATCHES) => (n < 2 ? 0 : Math.min(n <= DOUBLE_ROUND_ROBIN_MAX ? 2 * (n - 1) : n - 1, max));
 const TOURNEY_NAMES = ['Classic', 'Invitational', 'Challenge', 'Showcase', 'Kickoff', 'Cup'];
 
 // Kept for older code paths that read these (no midweek games in volleyball).
