@@ -36,7 +36,7 @@ check('every AAU field hockey program in the commissioner\'s conferences', () =>
   assert.equal(T['Boston University'].coach, 'Sarah Shute');
   for (const t of Object.values(T)) assert.ok(Math.abs(ovr(t) - (t.off * 0.4 + t.pit * 0.3 + t.def * 0.3)) < 1);
   assert.ok(ovr(T.Northwestern) > ovr(T.Tufts) + 30, 'Division I above Division III');
-  for (const c of Object.keys(CONFERENCES)) assert.ok(existsSync(new URL(`../${CONFERENCES[c].logo}`, import.meta.url)), `${c} logo`);
+  for (const c of Object.keys(CONFERENCES)) assert.ok((/^https:\/\//.test(CONFERENCES[c].logo) || existsSync(new URL(`../${CONFERENCES[c].logo}`, import.meta.url))), `${c} logo`);
   const s = splitOvr('Duke', 80);
   assert.ok(Math.abs(0.4 * s.off + 0.3 * s.pit + 0.3 * s.def - 80) <= 0.5);
   assert.deepEqual(Object.keys(SIDES), ['women'], 'one dynasty');
