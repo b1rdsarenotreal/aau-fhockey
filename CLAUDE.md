@@ -37,6 +37,15 @@ to those repos, and theirs aren't ported here, unless the owner asks.
   field in one week (`ncaa.homeSites`, `homeWeeks: 1`); Final Four at Trager
   Stadium, Louisville, semifinals Friday and final Sunday. User-facing text
   never says NCAA, MCWS, set, innings, runs or ties.
+- Selection uses the Power Index (NPI): `npi` in `js/standings.js`, with
+  each side's NCAA Division III dials in `settings.npi` (`NPI_BY_SIDE` in
+  `js/league.js`), when `settings.index` is 'npi' (the default;
+  `indexVersion` 1 switched older saves from the current or next season
+  on). A level game counts as a tie in the NPI even if penalty kicks or a
+  shootout decided it. The committee goes straight down the NPI: no tiers
+  (`sheet.tiers` empty). `rating(season)` gives the season's index in the
+  RPI's shape (value in `rpi`, plus `rank`, `sosRank`); use it, not
+  `rpi()`, and `indexName(season)` for on-screen labels.
 - On-screen text says "match", not "game".
 - The side machinery (`league.side`, `SIDES`, `currentSide`) is kept with
   one side, 'women', so code reads like the other AAU apps.
