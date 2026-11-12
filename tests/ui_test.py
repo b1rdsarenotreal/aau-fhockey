@@ -100,7 +100,7 @@ with sync_playwright() as p:
 
     # One dynasty: no women's/men's switch.
     assert not pg.locator("#side-switch").is_visible()
-    assert pg.locator("#league-name").inner_text() == "AAU Field Hockey"
+    assert pg.locator("#league-name").inner_text() == "Field Hockey"
 
     pg.set_viewport_size({"width": 390, "height": 800})
     for h in ["#/home", "#/schedule", "#/standings"]:
