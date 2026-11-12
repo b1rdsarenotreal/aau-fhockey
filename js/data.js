@@ -34,7 +34,7 @@
 // Wikipedia's list of Division I field hockey programs; the Division III
 // fields are the schools' main turf fields.
 
-import { DEFAULT_LOGOS } from './logo-import.js?v=20261111124333';
+import { DEFAULT_LOGOS } from './logo-import.js?v=20261111204958';
 
 export const START_YEAR = 2030;
 
@@ -129,7 +129,7 @@ export const SITES = {
 };
 
 // Names the logo lists may know a school by.
-export const LOGO_ALIASES = { 'Penn': 'Pennsylvania' };
+export const LOGO_ALIASES = { 'Penn': 'Pennsylvania', 'UConn': 'Connecticut' };
 
 // Head coaches for the 2026 season (see above). By 2030 some will have moved
 // on; rename anyone on the Coaches page.
