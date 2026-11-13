@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112192628';
-import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, NPI_DIALS, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112192628';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112192628';
-import { ovr } from './sim.js?v=20261112192628';
-import { simGames, addGame, weekName } from './league.js?v=20261112192628';
-import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112192628';
-import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112192628';
-import { fmtPct, hashStr } from './util.js?v=20261112192628';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112192628';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112192930';
+import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, NPI_DIALS, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112192930';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112192930';
+import { ovr } from './sim.js?v=20261112192930';
+import { simGames, addGame, weekName } from './league.js?v=20261112192930';
+import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112192930';
+import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112192930';
+import { fmtPct, hashStr } from './util.js?v=20261112192930';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112192930';
 
 // " at Easton Stadium, Los Angeles, Calif." for a host school with a home field.
 const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadium, t?.city].filter(Boolean).join(', '); return f ? ` at ${esc(f)}` : ''; };
@@ -238,15 +238,12 @@ export function renderStandings() {
       <div class="table-wrap"><table><thead><tr><th></th><th>Team</th><th class="num">Overall</th><th class="num">${indexName(s)}</th><th class="num">Home</th><th class="num">Away</th><th class="num">Strk</th></tr></thead>
         <tbody>${indep.map((t, i) => `<tr><td class="num muted">${i + 1}</td><td>${team(t)}</td><td class="num"><b>${recs[t].w}-${recs[t].l}</b></td><td class="num">${r[t]?.rank ?? '—'}</td><td class="num">${recs[t].hw}-${recs[t].hl}</td><td class="num">${recs[t].aw}-${recs[t].al}</td><td class="num">${recs[t].streak || ''}</td></tr>`).join('')}</tbody></table></div></div>` : '';
   const gbText = x => (x.gb ? (x.gb / 3).toFixed(1).replace('.0', '') : '—');
-  // The last five regular-season results; hovering one shows the match.
+  // The last five regular-season results; hovering them shows the five
+  // matches in the same pop-up as the poll's week records.
   const regDone = s.games.filter(g => g.type === 'regular' && isFinal(g)).sort((a, b) => a.week - b.week || (DAY_ORDER[a.day] ?? 0) - (DAY_ORDER[b.day] ?? 0) || a.order - b.order || a.id - b.id);
-  const last5 = t => regDone.filter(g => g.home === t || g.away === t).slice(-5).map(g => {
-    const k = resultFor(g, t), home = g.home === t, o = home ? g.away : g.home, us = home ? g.homeR : g.awayR, them = home ? g.awayR : g.homeR;
-    const extra = g.pk ? ' (SO)' : Math.max(g.homeLine.length, g.awayLine.length) > 4 ? ' (OT)' : '';
-    const tip = `${k === 'W' ? 'Won' : k === 'L' ? 'Lost' : 'Tied'} ${us}-${them}${extra} ${home ? 'vs.' : 'at'} ${o} · week ${g.week}, ${DAY_NAMES[g.day] || g.day}`;
-    return `<span class="l5 ${k === 'W' ? 'w' : k === 'L' ? 'l' : 't'}" title="${esc(tip)}" aria-label="${esc(tip)}" tabindex="0">${k}</span>`;
-  }).join('');
-  const strk = t => { const v = recs[t]?.streak || ''; return `<span class="strk ${v[0] === 'W' ? 'w' : v[0] === 'L' ? 'l' : ''}">${esc(v)}</span>`; };
+  const last5Games = t => regDone.filter(g => g.home === t || g.away === t).slice(-5);
+  const last5 = t => { const gs = last5Games(t); return gs.length ? `<span class="l5s wk-hover" data-wk="${esc(t)}" tabindex="0" aria-label="${esc(`${t}'s last ${gs.length} matches. Show them`)}">${gs.map(g => { const k = resultFor(g, t); return `<span class="l5 ${k === 'W' ? 'w' : k === 'L' ? 'l' : 't'}">${k}</span>`; }).join('')}</span>` : ''; };
+  const strk = t => { const v = regRecs[t]?.streak || ''; return `<span class="strk ${v[0] === 'W' ? 'w' : v[0] === 'L' ? 'l' : ''}">${esc(v)}</span>`; };
   // One conference's full table, in its colors (the AAU look, Nov. 2026).
   const card = c => {
     const st = confStandings(s, c, regRecs, r);
@@ -269,7 +266,7 @@ export function renderStandings() {
           <td>${team(x.team, { size: 26 })}</td>
           <td class="num st-c"><b>${x.cw}-${x.cl}</b></td><td class="num st-c">${gbText(x)}</td>
           <td class="num">${recs[x.team].w}-${recs[x.team].l}</td><td class="num muted">${recs[x.team].rs}–${recs[x.team].ra}</td><td class="num muted">${x.hw}-${x.hl}</td><td class="num muted">${x.aw}-${x.al}</td>
-          <td class="num">${strk(x.team)}</td><td><span class="l5s">${last5(x.team)}</span></td></tr>`).join('')}</tbody></table></div>
+          <td class="num">${strk(x.team)}</td><td>${last5(x.team)}</td></tr>`).join('')}</tbody></table></div>
       <div class="st-legend"><span><b class="st-rk">5</b> Top ${pollSizeOf(s)} rank</span><span><span class="l5 w">W</span> Win</span><span><span class="l5 l">L</span> Loss</span>${size && size < n ? `<span><i class="st-cut"></i> Conference tournament cut (top ${size})</span>` : ''}</div>
       <details class="small st-pad st-comm"><summary class="muted">Commissioner</summary><div class="row" style="margin-top:8px">
         <label class="field">Regular-season champion <select data-champ="${esc(c)}"><option value="">Automatic (${esc(regSeasonChamps({ ...s, overrides: {} }, c, regRecs, r).join(' & ') || '—')})</option>${teamOptions(s.overrides.regChamps?.[c], { blank: false, list: st.map(x => x.team) })}</select></label>
@@ -305,6 +302,7 @@ export function renderStandings() {
       </div>
     </div>`;
   $$('[data-stc]').forEach(b => (b.onclick = e => { if (e.target.closest('a')) return; ui.standConf = b.dataset.stc; renderStandings(); window.scrollTo(0, 0); }));
+  bindWeekPopups(app, s, last5Games, null, 'Last 5 matches');
   $$('[data-champ]').forEach(sel => (sel.onchange = () => {
     s.overrides.regChamps ||= {};
     if (sel.value) s.overrides.regChamps[sel.dataset.champ] = sel.value; else delete s.overrides.regChamps[sel.dataset.champ];
@@ -342,8 +340,8 @@ export function renderRankings() {
 
 // Hover (or focus, or tap) a team's record for the week to see the games:
 // a small card with each opponent, its rank at the time, and the score.
-function weekPopupHtml(s, t, games, key) {
-  const title = key === 'final' ? 'National Tournament' : key === postWeeks(s).conf ? 'Conference tournament' : `Week ${key}`;
+function weekPopupHtml(s, t, games, key, heading = null) {
+  const title = heading ? heading : key === 'final' ? 'National Tournament' : key === postWeeks(s).conf ? 'Conference tournament' : `Week ${key}`;
   return `<div class="wkp-head">${logoImg(teamInfo(t), 18)}<b>${esc(t)}</b><span class="muted">${title}</span></div>
     ${games.map(g => {
       const home = g.home === t, opp = home ? g.away : g.home, res = resultFor(g, t), note = g.pk ? `SO ${home ? g.pk.home : g.pk.away}-${home ? g.pk.away : g.pk.home}` : periodNote(g);
@@ -355,7 +353,7 @@ function weekPopupHtml(s, t, games, key) {
     }).join('')}`;
 }
 
-function bindWeekPopups(root, s, weekGames, key) {
+function bindWeekPopups(root, s, weekGames, key, heading = null) {
   document.querySelector('.wk-pop')?.remove();
   const pop = document.createElement('div');
   pop.className = 'wk-pop'; pop.setAttribute('role', 'tooltip'); pop.hidden = true;
@@ -366,7 +364,7 @@ function bindWeekPopups(root, s, weekGames, key) {
     const t = el.dataset.wk, gs = weekGames(t);
     if (!gs.length) return;
     owner = el;
-    pop.innerHTML = weekPopupHtml(s, t, gs, key);
+    pop.innerHTML = weekPopupHtml(s, t, gs, key, heading);
     pop.hidden = false;
     // Below the record, or above it when there's no room; kept on screen.
     const r = el.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
