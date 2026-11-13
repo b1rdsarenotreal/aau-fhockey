@@ -46,6 +46,16 @@ to those repos, and theirs aren't ported here, unless the owner asks.
   (`sheet.tiers` empty). `rating(season)` gives the season's index in the
   RPI's shape (value in `rpi`, plus `rank`, `sosRank`); use it, not
   `rpi()`, and `indexName(season)` for on-screen labels.
+- The AAU look (Nov. 2026), built to match the owner's mockups: a two-row
+  top bar (brand row, then the menu); scoreboard cards (`gameCard`: the
+  conference's color bar and logo, a row per team with each quarter and the
+  final, the loser faded); standings with the conference list down the side
+  (`st-*`), each conference in its colors (`confVars`, `confHead`), All
+  conferences compact; the poll as a board (`pb-*`) beside movers, receiving
+  votes and dropped out, under the No. 1 team's card; the team page header in
+  the team's colors with title banners and a numbers strip (`teamHero`) and
+  schedule boxes (`ts2-*`); Postseason → Full bracket (`renderBoard`).
+  Navy `--board`, gold `--optic`; Oswald, Saira Condensed, Inter.
 - On-screen text says "match", not "game".
 - The side machinery (`league.side`, `SIDES`, `currentSide`) is kept with
   one side, 'women', so code reads like the other AAU apps.
