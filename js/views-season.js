@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112192930';
-import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, NPI_DIALS, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112192930';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112192930';
-import { ovr } from './sim.js?v=20261112192930';
-import { simGames, addGame, weekName } from './league.js?v=20261112192930';
-import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112192930';
-import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112192930';
-import { fmtPct, hashStr } from './util.js?v=20261112192930';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112192930';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112193217';
+import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, NPI_DIALS, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112193217';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112193217';
+import { ovr } from './sim.js?v=20261112193217';
+import { simGames, addGame, weekName } from './league.js?v=20261112193217';
+import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112193217';
+import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112193217';
+import { fmtPct, hashStr } from './util.js?v=20261112193217';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112193217';
 
 // " at Easton Stadium, Los Angeles, Calif." for a host school with a home field.
 const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadium, t?.city].filter(Boolean).join(', '); return f ? ` at ${esc(f)}` : ''; };
@@ -238,12 +238,13 @@ export function renderStandings() {
       <div class="table-wrap"><table><thead><tr><th></th><th>Team</th><th class="num">Overall</th><th class="num">${indexName(s)}</th><th class="num">Home</th><th class="num">Away</th><th class="num">Strk</th></tr></thead>
         <tbody>${indep.map((t, i) => `<tr><td class="num muted">${i + 1}</td><td>${team(t)}</td><td class="num"><b>${recs[t].w}-${recs[t].l}</b></td><td class="num">${r[t]?.rank ?? '—'}</td><td class="num">${recs[t].hw}-${recs[t].hl}</td><td class="num">${recs[t].aw}-${recs[t].al}</td><td class="num">${recs[t].streak || ''}</td></tr>`).join('')}</tbody></table></div></div>` : '';
   const gbText = x => (x.gb ? (x.gb / 3).toFixed(1).replace('.0', '') : '—');
-  // The last five regular-season results; hovering them shows the five
-  // matches in the same pop-up as the poll's week records.
-  const regDone = s.games.filter(g => g.type === 'regular' && isFinal(g)).sort((a, b) => a.week - b.week || (DAY_ORDER[a.day] ?? 0) - (DAY_ORDER[b.day] ?? 0) || a.order - b.order || a.id - b.id);
+  // The last five results, postseason included (the owner's call, Nov.
+  // 2026); hovering them shows the five matches in the same pop-up as the
+  // poll's week records. The streak counts every match too.
+  const regDone = s.games.filter(isFinal).sort((a, b) => a.week - b.week || (DAY_ORDER[a.day] ?? 0) - (DAY_ORDER[b.day] ?? 0) || (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
   const last5Games = t => regDone.filter(g => g.home === t || g.away === t).slice(-5);
   const last5 = t => { const gs = last5Games(t); return gs.length ? `<span class="l5s wk-hover" data-wk="${esc(t)}" tabindex="0" aria-label="${esc(`${t}'s last ${gs.length} matches. Show them`)}">${gs.map(g => { const k = resultFor(g, t); return `<span class="l5 ${k === 'W' ? 'w' : k === 'L' ? 'l' : 't'}">${k}</span>`; }).join('')}</span>` : ''; };
-  const strk = t => { const v = regRecs[t]?.streak || ''; return `<span class="strk ${v[0] === 'W' ? 'w' : v[0] === 'L' ? 'l' : ''}">${esc(v)}</span>`; };
+  const strk = t => { const v = recs[t]?.streak || ''; return `<span class="strk ${v[0] === 'W' ? 'w' : v[0] === 'L' ? 'l' : ''}">${esc(v)}</span>`; };
   // One conference's full table, in its colors (the AAU look, Nov. 2026).
   const card = c => {
     const st = confStandings(s, c, regRecs, r);
@@ -348,7 +349,7 @@ function weekPopupHtml(s, t, games, key, heading = null) {
       const at = (g.site || (g.neutral ? null : g.home)) === opp ? 'at' : 'vs.';
       const r = cache.ranksAt(g.week)[opp], inn = Math.max(g.homeLine.length, g.awayLine.length);
       return `<div class="wkp-row"><span class="wkp-day">${esc(g.day)}</span><span class="wkp-vs">${at}</span><span class="pt-logo wkp-logo">${logoImg(teamInfo(opp), 18)}</span>
-        <span class="wkp-opp">${r ? `<span class="muted">#${r}</span> ` : ''}${esc(opp)}</span>
+        <span class="wkp-opp">${r ? `<span class="muted">#${r}</span> ` : ''}${esc(opp)}${g.type !== 'regular' && g.label ? ` <span class="muted wkp-round">· ${esc(g.label.split(' · ').slice(-1)[0])}</span>` : ''}</span>
         <span class="wkp-res"><b class="${res === 'W' ? 'w' : res === 'L' ? 'l' : ''}">${res}</b> ${home ? g.homeR : g.awayR}-${home ? g.awayR : g.homeR}${note ? ` <span class="muted">(${note})</span>` : ''}</span></div>`;
     }).join('')}`;
 }
