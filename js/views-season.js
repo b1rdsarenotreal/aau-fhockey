@@ -1,14 +1,14 @@
 // Season pages: home, schedule, standings, rankings and postseason.
 
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112191825';
-import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, NPI_DIALS, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112191825';
-import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112191825';
-import { ovr } from './sim.js?v=20261112191825';
-import { simGames, addGame, weekName } from './league.js?v=20261112191825';
-import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112191825';
-import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112191825';
-import { fmtPct, hashStr } from './util.js?v=20261112191825';
-import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112191825';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, cache, team, teamOptions, teamNames, confLogo, confHref, confColor, confInfo, gameCard, compactCard, placeholderCard, bindGameCards, openGame, resultText, periodNote, DAY_NAMES, readableOn, teamInfo, logoImg, teamHref, seasonLabel } from './ui.js?v=20261112192628';
+import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, NPI_DIALS, confStandings, conferences, regSeasonChamp, regSeasonChamps, TIEBREAKERS, quadrants, quadCuts, isIndependent, INDEPENDENT } from './standings.js?v=20261112192628';
+import { latestPoll, generatePoll, pollRankMap, pollSizeOf, VOTER_PANEL, voterStyle, votersOf, addRandomVoter, removeVoter } from './polls.js?v=20261112192628';
+import { ovr } from './sim.js?v=20261112192628';
+import { simGames, addGame, weekName } from './league.js?v=20261112192628';
+import { confClashes, CONF_FORMATS, confFormatName, confKind , regionalFirstRound } from './postseason.js?v=20261112192628';
+import { COMMITTEE_TIERS, gameVenue, COMMITTEE_SHORT, committeeSheet, compareTeams, mcwsVenue, postWeeks, regWeeksOf, ncaaConfig, hasSupers, noRegionals, fieldSize, wsTeams, formatSummary, shownSeed, postseasonBonus, defaultConfTourneySize, confTourneySeeds, reseedConfTourney, proposeField, lockField, pods, nodeTeams, nodeNeeded, runnerUp, committeeOrder, autoBids, refLabel, setConfFormat, ensureLayout, confHost, setConfHost, mcwsHistory, selectionBoard, setAtLarge, confirmField, unconfirmField, bracketology, BRACKETOLOGY_FROM_WEEK } from './postseason.js?v=20261112192628';
+import { fmtPct, hashStr } from './util.js?v=20261112192628';
+import { DAY_ORDER, CONF_WEEKENDS, applyConfWeekend } from './schedule.js?v=20261112192628';
 
 // " at Easton Stadium, Los Angeles, Calif." for a host school with a home field.
 const atField = (s, school) => { const t = s.teams[school]; const f = [t?.stadium, t?.city].filter(Boolean).join(', '); return f ? ` at ${esc(f)}` : ''; };
@@ -238,7 +238,14 @@ export function renderStandings() {
       <div class="table-wrap"><table><thead><tr><th></th><th>Team</th><th class="num">Overall</th><th class="num">${indexName(s)}</th><th class="num">Home</th><th class="num">Away</th><th class="num">Strk</th></tr></thead>
         <tbody>${indep.map((t, i) => `<tr><td class="num muted">${i + 1}</td><td>${team(t)}</td><td class="num"><b>${recs[t].w}-${recs[t].l}</b></td><td class="num">${r[t]?.rank ?? '—'}</td><td class="num">${recs[t].hw}-${recs[t].hl}</td><td class="num">${recs[t].aw}-${recs[t].al}</td><td class="num">${recs[t].streak || ''}</td></tr>`).join('')}</tbody></table></div></div>` : '';
   const gbText = x => (x.gb ? (x.gb / 3).toFixed(1).replace('.0', '') : '—');
-  const last5 = t => (regRecs[t]?.results || []).slice(-5).map(k => `<span class="l5 ${k === 'W' ? 'w' : k === 'L' ? 'l' : 't'}" title="${k === 'W' ? 'Win' : k === 'L' ? 'Loss' : 'Tie'}">${k}</span>`).join('');
+  // The last five regular-season results; hovering one shows the match.
+  const regDone = s.games.filter(g => g.type === 'regular' && isFinal(g)).sort((a, b) => a.week - b.week || (DAY_ORDER[a.day] ?? 0) - (DAY_ORDER[b.day] ?? 0) || a.order - b.order || a.id - b.id);
+  const last5 = t => regDone.filter(g => g.home === t || g.away === t).slice(-5).map(g => {
+    const k = resultFor(g, t), home = g.home === t, o = home ? g.away : g.home, us = home ? g.homeR : g.awayR, them = home ? g.awayR : g.homeR;
+    const extra = g.pk ? ' (SO)' : Math.max(g.homeLine.length, g.awayLine.length) > 4 ? ' (OT)' : '';
+    const tip = `${k === 'W' ? 'Won' : k === 'L' ? 'Lost' : 'Tied'} ${us}-${them}${extra} ${home ? 'vs.' : 'at'} ${o} · week ${g.week}, ${DAY_NAMES[g.day] || g.day}`;
+    return `<span class="l5 ${k === 'W' ? 'w' : k === 'L' ? 'l' : 't'}" title="${esc(tip)}" aria-label="${esc(tip)}" tabindex="0">${k}</span>`;
+  }).join('');
   const strk = t => { const v = recs[t]?.streak || ''; return `<span class="strk ${v[0] === 'W' ? 'w' : v[0] === 'L' ? 'l' : ''}">${esc(v)}</span>`; };
   // One conference's full table, in its colors (the AAU look, Nov. 2026).
   const card = c => {
@@ -422,8 +429,7 @@ function renderPollTab(root) {
     const t = teamInfo(top.team) || {}, bg = t.color || '#0b1f3a', ink = readableOn(bg), acc = readableOn(bg, t.altColor);
     const was = prev[top.team];
     const kicker = key === 0 ? 'Preseason No. 1' : key === 'final' ? (s.post?.mcws?.champion === top.team ? 'National champion · final No. 1' : 'Final No. 1') : prevKey === undefined ? 'No. 1' : was === 1 ? 'No. 1 again this week' : was ? `Up from No. ${was} to No. 1` : 'New No. 1';
-    const said = weekGames(top.team).map(g => { const r = resultFor(g, top.team), o = g.home === top.team ? g.away : g.home, us = g.home === top.team ? g.homeR : g.awayR, them = g.home === top.team ? g.awayR : g.homeR; return `${r === 'W' ? 'beat' : r === 'L' ? 'lost to' : 'tied'} ${prev[o] ? `No. ${prev[o]} ` : ''}${esc(o)} ${us}-${them}`; });
-    const line = [esc(top.record || ''), esc(t.conference || ''), said.join(', ')].filter(Boolean).join(' · ');
+    const line = [esc(top.record || ''), esc(t.conference || '')].filter(Boolean).join(' · ');
     return `<a class="poll-hero" href="${teamHref(top.team)}" style="--hb:${esc(bg)};--hi:${ink};--ha:${acc}">
       <span class="ph-rank">1</span><span class="ph-logo">${logoImg(t, 72)}</span>
       <span class="ph-main"><span class="ph-kick">${esc(kicker)}</span><span class="ph-name">${esc(top.team)}${t.mascot ? ` ${esc(t.mascot)}` : ''}</span><span class="ph-line">${line}</span></span>
@@ -1092,14 +1098,17 @@ function renderBoard(root) {
     <p class="small muted">Seeds inside a region are regional seeds; the ${name} shows national seeds. Click a match for its box score.</p>`;
   fitBoard(root);
 }
-// Size the board to the window: it grows to fill the width (up to 160%) and
-// shrinks to fit (down to 60%; past that it scrolls). It refits when the
-// window changes size.
+// Size the board to the window (see below). It refits when the window
+// changes size.
 function fitBoard(root) {
   const bb = $('.bb', root), box = $('.bb-scroll', root);
   if (!bb || !box) return;
   bb.style.zoom = 1;
-  const z = Math.min(1.6, Math.max(0.6, (box.clientWidth - 2) / bb.scrollWidth));
+  // Too wide: shrink to fit (down to 60%). Room to spare: grow a little (up
+  // to 115%) while the whole board still fits on screen, so a small field
+  // like 12 teams doesn't blow up.
+  const byW = (box.clientWidth - 2) / bb.scrollWidth, byH = (window.innerHeight - 260) / bb.scrollHeight;
+  const z = byW < 1 ? Math.max(0.6, byW) : Math.max(1, Math.min(1.15, byW, byH));
   bb.style.zoom = z.toFixed(3);
 }
 let boardResize = null;

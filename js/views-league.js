@@ -1,20 +1,20 @@
 // League pages: teams, team profiles, conferences, history, settings.
 
-import { readAauLogos, applyAauLogos, DEFAULT_LOGOS } from './logo-import.js?v=20261112191825';
-import { AAU_SCHOOLS, AAU_CONFERENCES, AAU_PROGRAMS } from './aau-schools.js?v=20261112191825';
-import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText, periodNote, seasonLabel, seasonSpan } from './ui.js?v=20261112191825';
-import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261112191825';
-import { ovr } from './sim.js?v=20261112191825';
-import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261112191825';
-import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel, defaultSettings } from './league.js?v=20261112191825';
-import { hotSeat, HEAT } from './hotseat.js?v=20261112191825';
-import { setRating } from './ratings.js?v=20261112191825';
-import { confFormatName, aqConferences, aqMinOf, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261112191825';
-import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, confTarget } from './schedule.js?v=20261112191825';
-import { exportLeague, clearLeague } from './store.js?v=20261112191825';
-import { conferencesFor, sideOf } from './data.js?v=20261112191825';
-import { clamp, fmtPct } from './util.js?v=20261112191825';
-import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261112191825';
+import { readAauLogos, applyAauLogos, DEFAULT_LOGOS } from './logo-import.js?v=20261112192628';
+import { AAU_SCHOOLS, AAU_CONFERENCES, AAU_PROGRAMS } from './aau-schools.js?v=20261112192628';
+import { ctx, S, app, modal, $, $$, esc, toast, changed, persist, flushSave, cache, team, teamInfo, logoImg, teamOptions, teamHref, confLogo, confHref, confInfo, confColor, imageFileToDataUrl, readableOn, openGame, resultText, periodNote, seasonLabel, seasonSpan } from './ui.js?v=20261112192628';
+import { isFinal, winnerOf, resultFor, records, rpi, rating, indexName, usesNpi, confStandings, regSeasonChamp, regSeasonChamps, isIndependent } from './standings.js?v=20261112192628';
+import { ovr } from './sim.js?v=20261112192628';
+import { latestPoll, pollRankMap, pollSizeOf, POLL_SIZES, DEFAULT_POLL_SIZE } from './polls.js?v=20261112192628';
+import { addTeam, removeTeam, renameTeam, addConference, renameConference, deleteConference, rebuildSchedule, startNextSeason, weekName, newLeague, beginOffseason, draftRemoveTeam, draftRestoreTeam, draftWarnings, coachName, coachSchool, hireCoach, newCoach, availableCoaches, backfillHitsErrors, placeRemaining, clearPoints, pointsLeft, migrateLeague, applyAlignment, canApplyAlignment, syncCoachBonus, devTotal, coachResumes, coachPrestige, prestigeLabel, coachBonus, programPrestiges, programLabel, fitLabel, defaultSettings } from './league.js?v=20261112192628';
+import { hotSeat, HEAT } from './hotseat.js?v=20261112192628';
+import { setRating } from './ratings.js?v=20261112192628';
+import { confFormatName, aqConferences, aqMinOf, postseasonFinish, postseasonDetail, postseasonRecord, wsTeams, postWeeks, regWeeksOf, ncaaConfig, ncaaProblems, fieldSize, hasSupers, formatSummary, proposeField, DEFAULT_NCAA, mcwsVenue, allEvents, gameVenue } from './postseason.js?v=20261112192628';
+import { DEFAULT_TOURNEY_WEEKS, DEFAULT_REG_WEEKS, DEFAULT_CONF_MATCHES, DEFAULT_MAX_MATCHES, confTarget } from './schedule.js?v=20261112192628';
+import { exportLeague, clearLeague } from './store.js?v=20261112192628';
+import { conferencesFor, sideOf } from './data.js?v=20261112192628';
+import { clamp, fmtPct } from './util.js?v=20261112192628';
+import { recordBook, teamPollHistory, headToHead } from './records.js?v=20261112192628';
 
 const ui = { confFilter: '', ncaaDraft: null, teamSort: { k: 'ovr', dir: -1 }, coachSort: { k: 'now', dir: -1 }, teamTab: 'season', h2hSort: { k: 'g', dir: -1 }, h2hFilter: 'all', memberSort: { k: 'titles', dir: -1 } };
 
@@ -592,11 +592,12 @@ function teamScheduleRows(s, name, t, games) {
       <span class="ts2-date">${esc(DOWN[g.day] || g.day)}, ${gameDate(s, g)}</span>
       <span class="ts2-where">${where}</span>
       <span class="ts2-opp"><span class="ts2-logo">${logoImg(teamInfo(opp), 30)}</span><span class="ts2-vs">${where === 'Away' ? 'at' : 'vs'}</span>${oppRank ? `<span class="ts2-rank">${oppRank}</span>` : ''}<a class="team-link" href="${teamHref(opp)}">${esc(opp)}</a>${seedNote ? `<span class="muted small">${seedNote}</span>` : ''}${tag}</span>
+      <span class="ts2-venue">${v.stadium ? `<b>${esc(v.stadium)}</b>` : ''}${v.city ? `<span>${esc(v.city)}</span>` : ''}</span>
       <span class="ts2-result">${result}</span>
     </div>`;
   };
   const head = gr => { const k = tally[gr.key]; const rec = k ? `${k.W}-${k.L}${gr.key === 'reg' && k.c ? ` · ${esc(confInfo(conf).abbr || conf)} ${k.cW}-${k.cL}` : ''}` : ''; return `<div class="ts2-head"><span>${esc(gr.title)}</span>${rec ? `<span class="ts2-hrec">${rec}</span>` : ''}</div>`; };
-  return `${groups.map(gr => `<section class="ts2-box">${head(gr)}<div class="ts2-scroll"><div class="ts2-cols"><span>Date</span><span>Where</span><span>Opponent</span><span>Result</span></div>${gr.games.map(row).join('')}</div></section>`).join('')}
+  return `${groups.map(gr => `<section class="ts2-box">${head(gr)}<div class="ts2-scroll"><div class="ts2-cols"><span>Date</span><span>Where</span><span>Opponent</span><span>Venue</span><span>Result</span></div>${gr.games.map(row).join('')}</div></section>`).join('')}
     <p class="small muted" style="margin-top:10px">Click a match or its result for the box score. Ranks are from the poll in effect when the match was played.</p>`;
 }
 
