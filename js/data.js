@@ -34,7 +34,7 @@
 // Wikipedia's list of Division I field hockey programs; the Division III
 // fields are the schools' main turf fields.
 
-import { DEFAULT_LOGOS } from './logo-import.js?v=20261116231819';
+import { DEFAULT_LOGOS } from './logo-import.js?v=20261116232155';
 
 export const START_YEAR = 2030;
 
