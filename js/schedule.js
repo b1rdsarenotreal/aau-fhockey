@@ -20,9 +20,9 @@
 // When `prev` (last season) is given, conference opponents who met last year
 // swap home and away.
 
-import { isIndependent } from './standings.js?v=20261117010417';
-import { cityPoint, miles } from './geo.js?v=20261117010417';
-import { rng, shuffle, hashStr } from './util.js?v=20261117010417';
+import { isIndependent } from './standings.js?v=20261117171427';
+import { cityPoint, miles } from './geo.js?v=20261117171427';
+import { rng, shuffle, hashStr } from './util.js?v=20261117171427';
 
 export const DEFAULT_REG_WEEKS = 10;
 export const DEFAULT_TOURNEY_WEEKS = 0; // kept for older code paths: no invitationals
@@ -281,6 +281,24 @@ export function eventSizes(n, events = Math.floor(n / 4)) {
   return Array.from({ length: events }, (_, i) => base + (i < extra ? 1 : 0));
 }
 
+// Games on the non-conference-only weekends, grouped by date (a round: no
+// team twice), have their dates shuffled among those rounds. Every round is a
+// set of disjoint pairs, so no team ends up playing twice in a day.
+function shuffleNonConfRounds(games, slotPairs, r) {
+  const confWeeks = new Set(Object.keys(slotPairs).map(k => +k.split('|')[0]));
+  const rounds = new Map();
+  for (const g of games) if (!g.confGame && !g.tourney && !confWeeks.has(g.week)) {
+    const k = `${g.week}|${g.day}`;
+    if (!rounds.has(k)) rounds.set(k, []);
+    rounds.get(k).push(g);
+  }
+  const slots = [...rounds.keys()], lists = shuffle([...rounds.values()], r);
+  slots.forEach((k, i) => {
+    const [week, day] = k.split('|');
+    for (const g of lists[i]) { g.week = +week; g.day = day; g.order = DAY_ORDER[day]; }
+  });
+}
+
 export function generateSchedule(season, seed = hashStr(String(season.year)), prev = null) {
   const r = rng(seed);
   const teams = season.teams;
@@ -486,5 +504,11 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
     const { pairs: extra } = crossPairs(idle, teams, met, r);
     for (const [a, b] of extra) { const [h, aw] = orient(a, b); add(week, h, aw, { ...seriesDays('fsu')[1], slot: 1 }); }
   }
+  // The non-conference weekends are drawn one after another, each pairing
+  // teams of a similar level who haven't met, so a top team's strongest
+  // opponents would all come first, in order. Shuffle those rounds among the
+  // non-conference dates so the big matches are spread through the
+  // non-conference season (the owner's ask, Nov. 2026).
+  shuffleNonConfRounds(games, slotPairs, r);
   return games;
 }

@@ -28,6 +28,10 @@ to those repos, and theirs aren't ported here, unless the owner asks.
   round robin, or a double round robin (home and away) for a conference of
   6 or fewer (`confTarget`, `DOUBLE_ROUND_ROBIN_MAX`); non-conference matches pair nearby teams of similar level (few marquee games each: top-third pairings get costlier per one a team has, `MARQUEE` in `js/schedule.js`);
   cap 18.
+- Non-conference dates are shuffled (`shuffleNonConfRounds`, the owner's
+  ask, Nov. 2026): the non-conference weekends are drawn one after another,
+  each pairing similar teams, so a top team's best opponents would come in
+  a row; the rounds are then dealt out to the non-conference dates at random.
 - **Automatic bids only for conferences with at least `settings.aqMin` (4)
   teams** (`aqConferences` in `js/postseason.js`); conference tournaments (top
   4, single elimination) default to the same conferences.
