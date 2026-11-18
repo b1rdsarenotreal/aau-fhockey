@@ -20,9 +20,10 @@
 // When `prev` (last season) is given, conference opponents who met last year
 // swap home and away.
 
-import { isIndependent } from './standings.js?v=20261117171427';
-import { cityPoint, miles } from './geo.js?v=20261117171427';
-import { rng, shuffle, hashStr } from './util.js?v=20261117171427';
+import { isIndependent } from './standings.js?v=20261117172925';
+import { cityPoint, miles } from './geo.js?v=20261117172925';
+import { rng, shuffle, hashStr } from './util.js?v=20261117172925';
+import { partnersOf, partnerRounds } from './partners.js?v=20261117172925';
 
 export const DEFAULT_REG_WEEKS = 10;
 export const DEFAULT_TOURNEY_WEEKS = 0; // kept for older code paths: no invitationals
@@ -330,13 +331,19 @@ export function generateSchedule(season, seed = hashStr(String(season.year)), pr
   const byConf = {};
   for (const n of names) if (!isIndependent(teams[n].conference)) (byConf[teams[n].conference] ||= []).push(n);
   const confWeeks = confWeeksMax(REG);
+  season.partnerConfs = []; // conferences scheduled with travel partners this time
   const slotPairs = {}; // `${week}|${slot}` -> [[a, b, conf]]
   for (const [conf, list] of Object.entries(byConf).sort((a, b) => a[0].localeCompare(b[0]))) {
     if (list.length < 2) continue;
     // A pair that only meets once this year swaps hosts from last year when
     // the home/away balance allows.
     const prefer = (a, b) => { const h = hosts.get(key(a, b)); return !h || h === 'both' ? 0 : h === a ? -1 : 1; };
-    const rounds = confRounds(list, confWeeks * PER_WEEK, r, season.settings?.confMatches ?? DEFAULT_CONF_MATCHES, prefer);
+    // Travel partners when the conference has them: a pair visits a pair for
+    // the weekend (two matches each); else the plain round robin.
+    const T = confTarget(list.length, season.settings?.confMatches ?? DEFAULT_CONF_MATCHES);
+    const pr = partnerRounds(list, partnersOf(season, conf, list), T, r, prefer);
+    if (pr && pr.length <= confWeeks * PER_WEEK) season.partnerConfs.push(conf);
+    const rounds = pr && pr.length <= confWeeks * PER_WEEK ? pr : confRounds(list, confWeeks * PER_WEEK, r, season.settings?.confMatches ?? DEFAULT_CONF_MATCHES, prefer);
     const weeksNeeded = Math.ceil(rounds.length / PER_WEEK);
     const firstWeek = REG - weeksNeeded + 1;
     rounds.forEach((pairs, i) => {
