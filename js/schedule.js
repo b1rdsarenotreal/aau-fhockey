@@ -20,10 +20,11 @@
 // When `prev` (last season) is given, conference opponents who met last year
 // swap home and away.
 
-import { isIndependent } from './standings.js?v=20261117175613';
-import { cityPoint, miles } from './geo.js?v=20261117175613';
-import { rng, shuffle, hashStr } from './util.js?v=20261117175613';
-import { partnersOf, partnerRounds } from './partners.js?v=20261117175613';
+import { isIndependent } from './standings.js?v=20261117182452';
+import { cityPoint, miles } from './geo.js?v=20261117182452';
+import { rng, shuffle, hashStr } from './util.js?v=20261117182452';
+import { spreadConfHomes } from './homeaway.js?v=20261117182452';
+import { partnersOf, partnerRounds } from './partners.js?v=20261117182452';
 
 export const DEFAULT_REG_WEEKS = 10;
 export const DEFAULT_TOURNEY_WEEKS = 0; // kept for older code paths: no invitationals
@@ -300,7 +301,25 @@ function shuffleNonConfRounds(games, slotPairs, r) {
   });
 }
 
+// The season's schedule. Once it's drawn, conference hosts (and, where a
+// week allows, the order of conference weeks) are set so no team plays more
+// than two conference weekends in a row away, or three at home (the owner's
+// rule, Nov. 2026; `js/homeaway.js`). Travel-partner conferences are already
+// built that way.
 export function generateSchedule(season, seed = hashStr(String(season.year)), prev = null) {
+  const games = drawSchedule(season, seed, prev);
+  const last = new Map();
+  for (const g of prev?.games || []) if (g.type === 'regular' && g.confGame) { const k = key(g.home, g.away); last.set(k, last.has(k) && last.get(k) !== g.home ? 'both' : g.home); }
+  const sorted = games.every((g, i) => !i || games[i - 1].week <= g.week);
+  spreadConfHomes(games, season.teams, rng((seed ^ 0x5bd1e995) >>> 0), {
+    skip: c => (season.partnerConfs || []).includes(c),
+    lastHost: (a, b) => { const h = last.get(key(a, b)); return h && h !== 'both' ? h : null; },
+  });
+  if (sorted) games.sort((a, b) => a.week - b.week);
+  return games;
+}
+
+function drawSchedule(season, seed, prev) {
   const r = rng(seed);
   const teams = season.teams;
   const names = Object.keys(teams);
