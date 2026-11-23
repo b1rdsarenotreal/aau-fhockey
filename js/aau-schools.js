@@ -1,4 +1,4 @@
-import { CONF_LOGO_LINKS } from './data.js?v=20261122204345';
+import { CONF_LOGO_LINKS } from './data.js?v=20261123152539';
 
 // Every AAU member school, for the "AAU school" pick on the Add team form:
 // abbreviation, mascot, colors, city and the conference it plays in in the
@@ -127,7 +127,7 @@ export const AAU_SCHOOLS = {
   "UCLA": { abbr: "UCLA", mascot: "Bruins", color: '#2D68C4', altColor: '#F2A900', city: "Los Angeles, Calif.", conference: "Pacific-10 Conference" },
   "UConn": { abbr: "UCONN", mascot: "Huskies", color: '#000E2F', altColor: '#E4002B', city: "Storrs, Conn.", conference: "Metro Conference", joins: 2032 },
   "UIC": { abbr: "UIC", mascot: "Flames", color: '#001E62', altColor: '#D50032', city: "Chicago, Ill.", conference: "Horizon Valley Conference", crop: 4 },
-  "UMass Amherst": { abbr: "UMASS", mascot: "Minutemen", color: '#881C1C', altColor: '#000000', city: "Amherst, Mass.", conference: "Colonial 10", crop: 4 },
+  "UMass": { abbr: "UMASS", mascot: "Minutemen", color: '#881C1C', altColor: '#000000', city: "Amherst, Mass.", conference: "Colonial 10", crop: 4 },
   "UMKC": { abbr: "UMKC", mascot: "Roos", color: '#0067C5', altColor: '#FFC82E', city: "Kansas City, Mo.", conference: "Horizon Valley Conference", crop: 4 },
   "UNLV": { abbr: "UNLV", mascot: "Rebels", color: '#CF0A2C', altColor: '#666666', city: "Las Vegas, Nev.", conference: "Western Athletic Conference", crop: 3 },
   "USC": { abbr: "USC", mascot: "Trojans", color: '#990000', altColor: '#FFC72C', city: "Los Angeles, Calif.", conference: "Pacific-10 Conference" },
@@ -180,7 +180,7 @@ export const AAU_PROGRAMS = {
     "Boston College": { stadium: "Newton Campus Field Hockey Complex" },
     "Ohio": { stadium: "Pruitt Field" },
     "Northeastern": { stadium: "Dedham Field" },
-    "UMass Amherst": { stadium: "Gladchuk Sports Complex" },
+    "UMass": { stadium: "Gladchuk Sports Complex" },
     "Lehigh": { stadium: "Ulrich Sports Complex" },
     "Temple": { stadium: "Howarth Field" },
     "VCU": { stadium: "Cary Street Field" },
